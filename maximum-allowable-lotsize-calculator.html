@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blueberry Funded: (Maximum Allowable Lotsize Calculator)</title>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+    .dark-mode {
+      background-color: #222;
+      color: #f8f9fa;
+    }
+    #calculator {
+      max-width: 600px;
+      margin: 1px auto;
+      padding: 40px 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+      position: relative;
+    }
+    .dark-mode #calculator {
+      background-color: #222;
+      border-color: #666;
+    }
+    h1 {
+      margin: 0;
+      text-align: center;
+    }
+    .title-purple {
+      color: purple;
+      font-weight: bold;
+      font-size: 1.5em;
+    }
+    .subtitle {
+      font-size: 1.0em;
+      font-weight: bold;
+      margin-top: 2px;
+      text-align: center;
+    }
+    .input-group {
+      text-align: center;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: normal;
+    }
+    .inline-label {
+      display: inline-block;
+      margin-right: 5px;
+    }
+    input[type="text"], select {
+      padding: 5px;
+      width: 80%;
+      max-width: 300px;
+      background-color: #f0f0f0; /* very light grey */
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .error {
+      color: red;
+      font-size: 0.9em;
+    }
+    .buttons {
+      text-align: center;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    #refresh-btn {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    #calculate-btn {
+      background-color: #007bff;
+      color: #fff;
+    }
+    #calculate-btn:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+    /* Light/Dark Mode Toggle */
+    #mode-toggle {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      cursor: pointer;
+      padding: 5px 5px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+    }
+    #mode-toggle:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="calculator">
+    <!-- Light/Dark Mode Switch at top-right -->
+    <button id="mode-toggle">Dark Mode</button>
+    
+    <!-- Title -->
+    <h1 class="title-purple">Blueberry Funded</h1>
+    <div class="subtitle">(Maximum Allowable Lotsize Calculator)</div>
+    
+    <!-- Available Account Equity -->
+    <div class="input-group">
+      <label for="equity">Available Account Equity:</label>
+      <input type="text" id="equity" placeholder="e.g. 10000" value="10000">
+      <div class="error" id="error-equity"></div>
+    </div>
+    
+    <!-- Contract Size Dropdown -->
+    <div class="input-group">
+      <label class="inline-label" for="contractSize">Contract Size:</label>
+      <select id="contractSize">
+        <option value="">Select Contract Size</option>
+        <option value="1">(Crypto) 1</option>
+        <option value="10">(Indices) 10</option>
+        <option value="100">(Metals/Commodities) 100</option>
+        <option value="1000">(?) 1,000</option>
+        <option value="10000">(?) 10,000</option>
+        <option value="100000">(Forex) 100,000</option>
+      </select>
+      <div class="error" id="error-contractSize"></div>
+    </div>
+    
+    <!-- Currency Pair Input -->
+    <div class="input-group">
+      <label for="currencyPair">Your Pair [Base over Quote] (e.g GBP/NZD):</label>
+      <input type="text" id="currencyPair" placeholder="Enter current price e.g. 2.2032">
+      <div class="error" id="error-currencyPair"></div>
+    </div>
+    
+    <!-- Cross Against the USD Input -->
+    <div class="input-group">
+      <label for="crossAgainstUSD">Quote against the USD (e.g. NZD/USD): *If USD is the Quote, enter 1.</label>
+      <input type="text" id="crossAgainstUSD" placeholder="Enter current price e.g. 0.5727">
+      <div class="error" id="error-crossAgainstUSD"></div>
+    </div>
+    
+    <!-- Leverage Dropdown -->
+    <div class="input-group">
+      <label class="inline-label" for="leverage">Leverage:</label>
+      <select id="leverage">
+        <option value="">Select Leverage</option>
+        <option value="2">(Cryptos) 2</option>
+        <option value="10">(Metals/Indices/Commodities) 10</option>
+        <option value="30">(Rapid/1 Step) 30</option>
+        <option value="50">(2 Step) 50</option>
+      </select>
+      <div class="error" id="error-leverage"></div>
+    </div>
+    
+    <!-- Buttons -->
+    <div class="buttons">
+      <button id="refresh-btn">REFRESH</button>
+      <span> | </span>
+      <button id="calculate-btn">CALCULATE</button>
+    </div>
+    
+    <!-- Result Display -->
+    <div class="result" id="result"></div>
+  </div>
+  
+  <script>
+    // Toggle Light/Dark Mode
+    const modeToggle = document.getElementById('mode-toggle');
+    modeToggle.addEventListener('click', function() {
+      document.body.classList.toggle('dark-mode');
+      modeToggle.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+    });
+    
+    // Clear any error messages
+    function clearErrors() {
+      document.getElementById('error-equity').textContent = '';
+      document.getElementById('error-contractSize').textContent = '';
+      document.getElementById('error-currencyPair').textContent = '';
+      document.getElementById('error-crossAgainstUSD').textContent = '';
+      document.getElementById('error-leverage').textContent = '';
+    }
+    
+    // Refresh Button – resets fields and clears errors/result
+    document.getElementById('refresh-btn').addEventListener('click', function() {
+      clearErrors();
+      document.getElementById('equity').value = '10000';
+      document.getElementById('contractSize').value = '';
+      document.getElementById('currencyPair').value = '';
+      document.getElementById('crossAgainstUSD').value = '';
+      document.getElementById('leverage').value = '';
+      document.getElementById('result').textContent = '';
+    });
+    
+    // Calculate Button – computes the Maximum Allowable Lotsize
+    document.getElementById('calculate-btn').addEventListener('click', function() {
+      clearErrors();
+      let hasError = false;
+      
+      // Get and validate inputs
+      const equityStr = document.getElementById('equity').value.trim();
+      const contractSizeStr = document.getElementById('contractSize').value;
+      const currencyPairStr = document.getElementById('currencyPair').value.trim();
+      const crossAgainstUSDStr = document.getElementById('crossAgainstUSD').value.trim();
+      const leverageStr = document.getElementById('leverage').value;
+      
+      const equity = parseFloat(equityStr);
+      if (isNaN(equity)) {
+        document.getElementById('error-equity').textContent = "Invalid input. Please input a number!";
+        hasError = true;
+      }
+      
+      if (contractSizeStr === "") {
+        document.getElementById('error-contractSize').textContent = "Invalid selection. Please select a value!";
+        hasError = true;
+      }
+      const contractSize = parseFloat(contractSizeStr);
+      
+      const currencyPair = parseFloat(currencyPairStr);
+      if (isNaN(currencyPair)) {
+        document.getElementById('error-currencyPair').textContent = "Invalid input. Please input a number!";
+        hasError = true;
+      }
+      
+      const crossAgainstUSD = parseFloat(crossAgainstUSDStr);
+      if (isNaN(crossAgainstUSD)) {
+        document.getElementById('error-crossAgainstUSD').textContent = "Invalid input. Please input a number!";
+        hasError = true;
+      }
+      
+      if (leverageStr === "") {
+        document.getElementById('error-leverage').textContent = "Invalid selection. Please select a value!";
+        hasError = true;
+      }
+      const leverage = parseFloat(leverageStr);
+      
+      if (hasError) {
+        document.getElementById('result').textContent = '';
+        return;
+      }
+      
+      // Calculate Maximum Allowable Lotsize using:
+      // (Equity / 1.55) / (((Contract size / Leverage) * (Currency Pair)) / (Currency Against the USD))
+      const numerator = equity / 1.55;
+      const denominator = ((contractSize / leverage) * currencyPair) / crossAgainstUSD;
+      const maxLotSize = numerator / denominator;
+      
+      // Calculate Margin Level Percentage.
+      // (Used margin = maxLotSize * ((Contract size / Leverage) * currencyPair) / crossAgainstUSD = equity/1.55,
+      // so margin level = (Equity / used margin) * 100)
+      const usedMargin = maxLotSize * ((contractSize / leverage) * currencyPair) / crossAgainstUSD;
+      const marginLevelPercentage = (equity / usedMargin) * 100; // Ideally, this equals 155%
+      
+      // Format the outputs to 2 decimal places.
+      const maxLotSizeFormatted = maxLotSize.toFixed(2);
+      const marginLevelFormatted = marginLevelPercentage.toFixed(2) + '%';
+      
+      // Set the margin level text color: green if >=150%, otherwise red.
+      const marginColor = (marginLevelPercentage >= 150) ? 'green' : 'red';
+      
+      // Display the result.
+      document.getElementById('result').innerHTML = 
+        `Maximum Allowable Lotsize: <strong>${maxLotSizeFormatted}</strong> 
+         (<span style="color:${marginColor}">${marginLevelFormatted}</span>)`;
+    });
+  </script>
+</body>
+</html>
+```
